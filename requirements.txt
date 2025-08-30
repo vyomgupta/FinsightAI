@@ -45,6 +45,12 @@ python-dateutil>=2.8.0
 # Progress bars and utilities
 tqdm>=4.66.0
 
+# Environment variables
+python-dotenv>=1.0.0
+
+# Google Generative AI
+google-genai
+
 # Path handling (Python < 3.4 compatibility)
 pathlib2>=2.3.0; python_version < "3.4"
 
