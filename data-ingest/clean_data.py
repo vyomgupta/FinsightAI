@@ -3,7 +3,11 @@ from typing import List, Dict, Any, Optional
 import re
 from bs4 import BeautifulSoup
 from dateutil import parser as dtparser
-from .utils import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, LOG
+try:
+    from .utils import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, LOG
+except ImportError:
+    # Fallback for standalone execution
+    from utils import DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, LOG
 
 
 def normalize_text(text: str) -> str:
