@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+langchain
+chromadb
+transformers
+torch
+sentence-transformers
+requests
+beautifulsoup4
+feedparser
+pandas
+numpy
+scikit-learn
