@@ -217,13 +217,35 @@ class EmbeddingService:
         }
 
 
-# Factory function for easy model creation
-def get_jina_embedding_service(api_key: Optional[str] = None) -> EmbeddingService:
-    """Get a Jina embeddings service with recommended settings"""
+def create_embedding_service(model_name: str = "jina-embeddings-v3",
+                           model_type: str = "jina",
+                           jina_api_key: Optional[str] = None,
+                           cache_dir: Optional[str] = None) -> EmbeddingService:
+    """
+    Factory function to create an embedding service
+    
+    Args:
+        model_name: Name of the embedding model to use
+        model_type: Type of model ('jina')
+        jina_api_key: Jina API key
+        cache_dir: Directory to cache models
+    
+    Returns:
+        Configured EmbeddingService instance
+    """
+    # Ensure cache_dir is a Path object
+    if cache_dir is None:
+        cache_dir = Path.home() / ".cache" / "finsight_embeddings"
+    elif isinstance(cache_dir, str):
+        cache_dir = Path(cache_dir)
+    else:
+        cache_dir = Path(cache_dir)
+    
     return EmbeddingService(
-        model_name="jina-embeddings-v3",
-        model_type="jina",
-        jina_api_key=api_key
+        model_name=model_name,
+        model_type=model_type,
+        jina_api_key=jina_api_key,
+        cache_dir=cache_dir
     )
 
 
@@ -231,7 +253,7 @@ if __name__ == "__main__":
     # Test the embedding service
     if os.getenv("JINA_API_KEY"):
         print("\nTesting Jina embeddings...")
-        jina_service = get_jina_embedding_service()
+        jina_service = create_embedding_service()
         
         # Test encoding
         texts = ["This is a test sentence.", "Another test sentence."]

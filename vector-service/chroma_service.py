@@ -23,6 +23,39 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class JinaEmbeddingFunction:
+    """Custom embedding function for Jina embeddings in ChromaDB"""
+    
+    def __init__(self):
+        """Initialize the Jina embedding function"""
+        # Import here to avoid circular imports
+        try:
+            from embedding_service import EmbeddingService
+            self.embedding_service = EmbeddingService()
+            logger.info("Jina embedding function initialized for ChromaDB")
+        except ImportError as e:
+            logger.error(f"Failed to import embedding service: {e}")
+            raise
+    
+    def __call__(self, input) -> List[List[float]]:
+        """Generate embeddings for input texts"""
+        try:
+            # Handle both single strings and lists
+            if isinstance(input, str):
+                input = [input]
+            
+            # Generate embeddings using the Jina service
+            embeddings = []
+            for text in input:
+                embedding = self.embedding_service.encode(text)
+                embeddings.append(embedding.tolist() if hasattr(embedding, 'tolist') else embedding)
+            
+            return embeddings
+        except Exception as e:
+            logger.error(f"Error generating embeddings: {e}")
+            # Return zero vectors as fallback
+            return [[0.0] * 1024 for _ in input]
+
 
 class ChromaService:
     """
@@ -82,9 +115,15 @@ class ChromaService:
     def _initialize_collection(self, embedding_function: Optional[Any]) -> chromadb.Collection:
         """Initialize or get the collection"""
         try:
-            # Use default embedding function if none provided
+            # Use Jina embedding function if none provided
             if embedding_function is None:
-                embedding_function = embedding_functions.DefaultEmbeddingFunction()
+                try:
+                    embedding_function = JinaEmbeddingFunction()
+                    logger.info("Using Jina embedding function for ChromaDB")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize Jina embedding function: {e}")
+                    logger.info("Falling back to default embedding function")
+                    embedding_function = embedding_functions.DefaultEmbeddingFunction()
             
             # Try to get existing collection
             try:
@@ -349,18 +388,28 @@ class ChromaService:
     def get_collection_info(self) -> Dict[str, Any]:
         """Get information about the current collection"""
         try:
+            if not self.collection:
+                return {"error": "No collection loaded"}
+            
+            # Get collection count
             count = self.collection.count()
             
-            return {
-                "collection_name": self.collection_name,
-                "document_count": count,
-                "persist_directory": str(self.persist_directory),
-                "embedding_function": str(self.collection.embedding_function)
-            }
+            # Get collection name
+            name = self.collection.name
             
+            return {
+                "collection_name": name,
+                "document_count": count,
+                "metadata_schema": self.collection.metadata_schema,
+                "embedding_function": "jina-embeddings-v3"
+            }
         except Exception as e:
             logger.error(f"Error getting collection info: {e}")
-            return {}
+            return {
+                "error": str(e),
+                "collection_name": self.collection.name if self.collection else "unknown",
+                "document_count": 0
+            }
     
     def export_collection(self, export_path: str) -> bool:
         """

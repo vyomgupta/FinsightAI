@@ -76,6 +76,36 @@ SPECIALIZED_FEEDS = [
         category="analysis",
         description="Motley Fool investment advice and analysis"
     ),
+    RSSFeed(
+        name="ETF.com",
+        url="https://www.etf.com/rss/news",
+        category="analysis",
+        description="ETF news and analysis"
+    ),
+    RSSFeed(
+        name="Kitco News",
+        url="https://www.kitco.com/rss/kitco-news.xml",
+        category="commodities",
+        description="Precious metals and commodities news"
+    ),
+    RSSFeed(
+        name="OilPrice.com",
+        url="https://oilprice.com/rss/main",
+        category="commodities",
+        description="Oil and energy market news"
+    ),
+    RSSFeed(
+        name="Zero Hedge",
+        url="https://feeds.feedburner.com/zerohedge/feed",
+        category="analysis",
+        description="Alternative financial analysis and commentary"
+    ),
+    RSSFeed(
+        name="Wolf Street",
+        url="https://wolfstreet.com/feed/",
+        category="analysis",
+        description="Economic analysis and market commentary"
+    ),
 ]
 
 # Cryptocurrency and Fintech
@@ -169,3 +199,5 @@ if __name__ == "__main__":
         print(f"\n{category.upper()} ({len(feeds)} feeds):")
         for feed in feeds:
             print(f"  - {feed.name}: {feed.url}")
+
+
