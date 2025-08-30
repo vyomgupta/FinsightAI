@@ -62,8 +62,8 @@ class VectorServiceManager:
         """Load default configuration"""
         return {
             'embedding': {
-                'model_name': 'all-MiniLM-L6-v2',
-                'model_type': 'sentence_transformers',
+                'model_name': 'jina-embeddings-v3',
+                'model_type': 'jina',
                 'cache_dir': str(self.base_dir / 'embeddings')
             },
             'chroma': {
@@ -484,3 +484,4 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error testing vector service manager: {e}")
+
