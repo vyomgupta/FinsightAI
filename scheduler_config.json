@@ -1,0 +1,32 @@
+{
+  "scheduler": {
+    "fetch_interval_minutes": 30,
+    "max_articles_per_feed": 20,
+    "categories_to_fetch": ["business", "markets", "analysis"],
+    "enable_all_feeds": false,
+    "batch_size": 50,
+    "enable_on_startup": true,
+    "cleanup_old_data": true,
+    "max_data_age_days": 30,
+    "retry_attempts": 3,
+    "timeout_seconds": 30
+  },
+  "vector_service": {
+    "embedding": {
+      "model_name": "jina-embeddings-v3",
+      "model_type": "jina",
+      "cache_dir": "./vector_services/embeddings"
+    },
+    "chroma": {
+      "persist_directory": "./vector_services/chroma_db",
+      "collection_name": "finsight_documents"
+    },
+    "document": {
+      "storage_dir": "./vector_services/documents"
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "./logs/scheduler.log"
+  }
+}
