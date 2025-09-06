@@ -88,6 +88,7 @@ class VectorServiceManager:
             self.embedding_service = create_embedding_service(
                 model_name=embedding_config['model_name'],
                 model_type=embedding_config['model_type'],
+                jina_api_key=embedding_config.get('jina_api_key'),
                 cache_dir=embedding_config['cache_dir']
             )
             logger.info("Embedding service initialized")

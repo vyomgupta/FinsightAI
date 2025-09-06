@@ -306,7 +306,8 @@ class LLMService:
     def __init__(self, 
                  default_provider: str = "openai",
                  api_keys: Optional[Dict[str, str]] = None,
-                 models: Optional[Dict[str, str]] = None):
+                 models: Optional[Dict[str, str]] = None,
+                 generation_params: Optional[Dict[str, Any]] = None):
         """
         Initialize LLM service
         
@@ -314,12 +315,18 @@ class LLMService:
             default_provider: Default LLM provider to use
             api_keys: Dictionary of API keys for each provider
             models: Dictionary of models for each provider
+            generation_params: Dictionary of default generation parameters
         """
         self.default_provider = default_provider
         self.api_keys = api_keys or {}
         self.models = models or {
             "openai": "gpt-3.5-turbo",
-            "gemini": "gemini-2.5-flash"
+            "gemini": "gemini-2.5-flash",
+            "anthropic": "claude-3-haiku-20240307"
+        }
+        self.generation_params = generation_params or {
+            "max_tokens": 1000,
+            "temperature": 0.7
         }
         
         # Initialize clients
@@ -332,7 +339,7 @@ class LLMService:
         """Initialize LLM clients based on available API keys"""
         try:
             # Initialize OpenAI client
-            if "openai" in self.api_keys:
+            if "openai" in self.api_keys and self.api_keys["openai"]:
                 self.clients["openai"] = OpenAIClient(
                     api_key=self.api_keys["openai"],
                     model=self.models.get("openai", "gpt-3.5-turbo")
@@ -340,15 +347,23 @@ class LLMService:
                 logger.info("OpenAI client initialized")
             
             # Initialize Gemini client
-            if "gemini" in self.api_keys:
+            if "gemini" in self.api_keys and self.api_keys["gemini"]:
                 self.clients["gemini"] = GeminiClient(
                     api_key=self.api_keys["gemini"],
-                    model=self.models.get("gemini", "gemini-pro")
+                    model=self.models.get("gemini", "gemini-2.5-flash")
                 )
                 logger.info("Gemini client initialized")
             
+            # TODO: Add Anthropic client initialization here when implemented
+            # if "anthropic" in self.api_keys and self.api_keys["anthropic"]:
+            #     self.clients["anthropic"] = AnthropicClient(
+            #         api_key=self.api_keys["anthropic"],
+            #         model=self.models.get("anthropic", "claude-3-haiku-20240307")
+            #     )
+            #     logger.info("Anthropic client initialized")
+            
             if not self.clients:
-                logger.warning("No LLM clients initialized - no API keys provided")
+                logger.warning("No LLM clients initialized - no API keys provided or invalid keys")
                 
         except Exception as e:
             logger.error(f"Error initializing LLM clients: {e}")
@@ -377,7 +392,7 @@ class LLMService:
             
             if provider not in self.clients:
                 return LLMResponse(
-                    content=f"Provider {provider} not available",
+                    content=f"Provider {provider} not available or not configured. Available: {self.get_available_providers()}",
                     provider=provider,
                     model="unknown",
                     metadata={"error": f"Provider {provider} not configured"}
@@ -391,11 +406,14 @@ class LLMService:
             # Prepare user prompt
             user_prompt = self._prepare_prompt(query, context, insight_type)
             
+            # Combine default generation parameters with kwargs
+            gen_params = {**self.generation_params, **kwargs}
+            
             # Generate response
             response = client.generate(
                 prompt=user_prompt,
                 system_prompt=system_prompt,
-                **kwargs
+                **gen_params
             )
             
             logger.info(f"Generated insights using {provider} for query: '{query[:50]}...'")
@@ -481,8 +499,10 @@ def create_llm_service(config: Optional[Dict[str, Any]] = None) -> LLMService:
     Returns:
         Configured LLMService instance
     """
+    from api.utils.config import get_llm_config
+    
     if config is None:
-        config = {}
+        config = get_llm_config() # Load from global config manager
     
     # Load API keys from environment variables if not provided
     api_keys = config.get('api_keys', {})
@@ -490,11 +510,23 @@ def create_llm_service(config: Optional[Dict[str, Any]] = None) -> LLMService:
         api_keys['openai'] = os.getenv('OPENAI_API_KEY')
     if 'gemini' not in api_keys and os.getenv('GEMINI_API_KEY'):
         api_keys['gemini'] = os.getenv('GEMINI_API_KEY')
+    if 'anthropic' not in api_keys and os.getenv('ANTHROPIC_API_KEY'):
+        api_keys['anthropic'] = os.getenv('ANTHROPIC_API_KEY')
+    
+    # Load models from environment variables if not provided
+    models = config.get('models', {})
+    if 'openai' not in models and os.getenv('OPENAI_MODEL'):
+        models['openai'] = os.getenv('OPENAI_MODEL')
+    if 'gemini' not in models and os.getenv('GEMINI_MODEL'):
+        models['gemini'] = os.getenv('GEMINI_MODEL')
+    if 'anthropic' not in models and os.getenv('ANTHROPIC_MODEL'):
+        models['anthropic'] = os.getenv('ANTHROPIC_MODEL')
     
     return LLMService(
-        default_provider=config.get('default_provider', 'openai'),
+        default_provider=config.get('default_provider', 'gemini'),
         api_keys=api_keys,
-        models=config.get('models', {})
+        models=models,
+        generation_params=config.get('generation_params', {})
     )
 
 

@@ -71,6 +71,14 @@ class ConfigManager:
             if os.getenv('ANTHROPIC_API_KEY'):
                 self.set_nested('llm.api_keys.anthropic', os.getenv('ANTHROPIC_API_KEY'))
             
+            # LLM Models
+            if os.getenv('OPENAI_MODEL'):
+                self.set_nested('llm.models.openai', os.getenv('OPENAI_MODEL'))
+            if os.getenv('GEMINI_MODEL'):
+                self.set_nested('llm.models.gemini', os.getenv('GEMINI_MODEL'))
+            if os.getenv('ANTHROPIC_MODEL'):
+                self.set_nested('llm.models.anthropic', os.getenv('ANTHROPIC_MODEL'))
+            
             # Default LLM provider
             if os.getenv('DEFAULT_LLM_PROVIDER'):
                 self.set_nested('llm.default_provider', os.getenv('DEFAULT_LLM_PROVIDER'))
@@ -82,12 +90,26 @@ class ConfigManager:
             if os.getenv('EMBEDDING_MODEL'):
                 self.set_nested('vector_services.embedding.model_name', os.getenv('EMBEDDING_MODEL'))
             
+            # Jina API key for embeddings
+            jina_api_key = os.getenv('JINA_API_KEY')
+            if jina_api_key:
+                self.set_nested('vector_services.embedding.jina_api_key', jina_api_key)
+                logger.info(f"JINA_API_KEY loaded from environment: {jina_api_key}")
+            else:
+                logger.warning("JINA_API_KEY not found in environment variables")
+            
             # API configuration
             if os.getenv('API_HOST'):
                 self.set_nested('api.host', os.getenv('API_HOST'))
             
             if os.getenv('API_PORT'):
                 self.set_nested('api.port', int(os.getenv('API_PORT')))
+            
+            # Portfolio API Configuration
+            if os.getenv('PORTFOLIO_API_URL'):
+                self.set_nested('portfolio_api.url', os.getenv('PORTFOLIO_API_URL'))
+            if os.getenv('PORTFOLIO_API_KEY'):
+                self.set_nested('portfolio_api.api_key', os.getenv('PORTFOLIO_API_KEY'))
             
         except Exception as e:
             logger.error(f"Error loading environment variables: {e}")
@@ -146,7 +168,7 @@ class ConfigManager:
     def get_llm_config(self) -> Dict[str, Any]:
         """Get LLM service configuration"""
         return {
-            'default_provider': self.get('llm.default_provider', 'openai'),
+            'default_provider': self.get('llm.default_provider', 'gemini'),
             'api_keys': self.get('llm.api_keys', {}),
             'models': self.get('llm.models', {
                 'openai': 'gpt-3.5-turbo',
@@ -164,6 +186,7 @@ class ConfigManager:
             'embedding': {
                 'model_name': self.get('vector_services.embedding.model_name', 'jina-embeddings-v3'),
                 'model_type': self.get('vector_services.embedding.model_type', 'jina'),
+                'jina_api_key': self.get('vector_services.embedding.jina_api_key'),
                 'cache_dir': self.get('vector_services.embedding.cache_dir', './vector_services/embeddings')
             },
             'chroma': {
@@ -336,6 +359,14 @@ def get_rag_config() -> Dict[str, Any]:
 def get_api_config() -> Dict[str, Any]:
     """Get API configuration"""
     return get_config_manager().get_api_config()
+
+def get_portfolio_api_config() -> Dict[str, Any]:
+    """Get Portfolio API configuration"""
+    config_manager = get_config_manager()
+    return {
+        'url': os.getenv('PORTFOLIO_API_URL'),
+        'api_key': os.getenv('PORTFOLIO_API_KEY')
+    }
 
 
 if __name__ == "__main__":

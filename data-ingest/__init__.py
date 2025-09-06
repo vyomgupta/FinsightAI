@@ -17,3 +17,5 @@ __all__ = [
     'fetch_news_by_category',
     'prepare_article_for_embeddings'
 ]
+
+

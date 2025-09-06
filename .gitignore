@@ -23,3 +23,17 @@ dist/
 .DS_Store
 Thumbs.db
 *.env
+
+# Data directories
+data/
+
+# Vector service generated files
+vector_services/
+
+# Frontend build and dependencies
+web/node_modules/
+web/build/
+web/dist/
+
+# Log files
+*.log

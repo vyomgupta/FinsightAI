@@ -215,7 +215,15 @@ class RAGService:
         """
         # Initialize vector service manager if not provided
         if vector_service_manager is None:
-            vector_service_manager = create_vector_service_manager()
+            # Load configuration from API config manager
+            try:
+                sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+                from config import get_vector_service_config
+                vector_config = get_vector_service_config()
+                vector_service_manager = create_vector_service_manager(config=vector_config)
+            except Exception as e:
+                logger.warning(f"Could not load vector service config: {e}")
+                vector_service_manager = create_vector_service_manager()
         
         self.vector_service_manager = vector_service_manager
         
