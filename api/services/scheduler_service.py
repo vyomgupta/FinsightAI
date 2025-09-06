@@ -125,7 +125,7 @@ class RSSSchedulerService:
             'batch_size': 50,             # Batch size for processing
             'retry_attempts': 3,          # Retry attempts for failed feeds
             'timeout_seconds': 30,        # Request timeout
-            'enable_on_startup': True,    # Run immediately on startup
+            'enable_on_startup': False,   # Run immediately on startup (disabled by default)
             'cleanup_old_data': True,     # Clean up old data
             'max_data_age_days': 30      # Maximum age of data to keep
         }

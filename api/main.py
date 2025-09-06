@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     """Handle application startup and shutdown events"""
     logger.info("Starting FinSightAI application...")
     
-    # Startup: Initialize RSS scheduler
+    # Startup: Initialize RSS scheduler (but don't auto-start)
     if scheduler_available:
         try:
             # Load scheduler configuration from environment
@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
                 'categories_to_fetch': os.getenv('RSS_CATEGORIES', 'business,markets,analysis').split(','),
                 'enable_all_feeds': os.getenv('RSS_ENABLE_ALL_FEEDS', 'false').lower() == 'true',
                 'batch_size': int(os.getenv('RSS_BATCH_SIZE', '50')),
-                'enable_on_startup': os.getenv('RSS_ENABLE_ON_STARTUP', 'true').lower() == 'true',
+                'enable_on_startup': os.getenv('RSS_ENABLE_ON_STARTUP', 'false').lower() == 'true',  # Changed default to 'false'
                 'cleanup_old_data': os.getenv('RSS_CLEANUP_OLD_DATA', 'true').lower() == 'true',
                 'max_data_age_days': int(os.getenv('RSS_MAX_DATA_AGE_DAYS', '30'))
             }
@@ -69,16 +69,20 @@ async def lifespan(app: FastAPI):
                 }
             }
             
-            # Initialize and start scheduler
+            # Initialize scheduler service but DON'T auto-start it
             scheduler = initialize_scheduler_service(
                 config=scheduler_config,
                 vector_config=vector_config
             )
             
-            if scheduler.start_scheduler():
-                logger.info("RSS Scheduler started successfully")
+            # Only start if explicitly enabled via environment variable
+            if scheduler_config.get('enable_on_startup', False):
+                if scheduler.start_scheduler():
+                    logger.info("RSS Scheduler started successfully (auto-start enabled)")
+                else:
+                    logger.error("Failed to start RSS scheduler")
             else:
-                logger.error("Failed to start RSS scheduler")
+                logger.info("RSS Scheduler initialized but not started (auto-start disabled). Use /scheduler/start endpoint to start manually.")
                 
         except Exception as e:
             logger.error(f"Failed to initialize RSS scheduler: {e}")

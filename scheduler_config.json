@@ -5,7 +5,7 @@
     "categories_to_fetch": ["business", "markets", "analysis"],
     "enable_all_feeds": false,
     "batch_size": 50,
-    "enable_on_startup": true,
+    "enable_on_startup": false,
     "cleanup_old_data": true,
     "max_data_age_days": 30,
     "retry_attempts": 3,
