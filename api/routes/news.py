@@ -20,15 +20,39 @@ async def get_latest_news(
     """Get latest news articles"""
     try:
         # Placeholder implementation - you can integrate with your vector service here
-        return {
-            "articles": [],
-            "total": 0,
-            "category": category,
-            "message": "News endpoint placeholder - integrate with RSS scheduler data"
-        }
+        # Return empty array directly to match frontend expectations
+        return []
     except Exception as e:
         logger.error(f"Error fetching latest news: {e}")
         raise HTTPException(status_code=500, detail="Error fetching news")
+
+@router.get("/category/{category}")
+async def get_news_by_category(
+    category: str,
+    limit: int = Query(10, description="Number of articles to return")
+):
+    """Get news articles by category"""
+    try:
+        # Placeholder implementation - you can integrate with your vector service here
+        # Return empty array directly to match frontend expectations
+        return []
+    except Exception as e:
+        logger.error(f"Error fetching news by category: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching news by category")
+
+@router.get("/search")
+async def search_news(
+    q: str = Query(..., description="Search query"),
+    limit: int = Query(10, description="Number of articles to return")
+):
+    """Search news articles"""
+    try:
+        # Placeholder implementation - you can integrate with your vector service here
+        # Return empty array directly to match frontend expectations
+        return []
+    except Exception as e:
+        logger.error(f"Error searching news: {e}")
+        raise HTTPException(status_code=500, detail="Error searching news")
 
 @router.get("/categories")
 async def get_news_categories():

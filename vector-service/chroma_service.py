@@ -125,23 +125,37 @@ class ChromaService:
                     logger.info("Falling back to default embedding function")
                     embedding_function = embedding_functions.DefaultEmbeddingFunction()
             
-            # Try to get existing collection
+            # Try to get existing collection first
             try:
                 collection = self.client.get_collection(
                     name=self.collection_name,
                     embedding_function=embedding_function
                 )
                 logger.info(f"Retrieved existing collection: {self.collection_name}")
-            except:
-                # Create new collection if it doesn't exist
+                return collection
+            except Exception as get_error:
+                logger.debug(f"Collection {self.collection_name} not found, attempting to create: {get_error}")
+            
+            # If getting collection failed, try to create a new one
+            try:
                 collection = self.client.create_collection(
                     name=self.collection_name,
                     embedding_function=embedding_function,
                     metadata={"description": "FinSightAI document collection"}
                 )
                 logger.info(f"Created new collection: {self.collection_name}")
-            
-            return collection
+                return collection
+            except Exception as create_error:
+                # If creation also fails, it might be because collection exists but with different embedding function
+                # Try to get it without specifying embedding function
+                logger.warning(f"Failed to create collection, trying to get existing: {create_error}")
+                try:
+                    collection = self.client.get_collection(name=self.collection_name)
+                    logger.info(f"Retrieved existing collection without embedding function: {self.collection_name}")
+                    return collection
+                except Exception as final_error:
+                    logger.error(f"All attempts to initialize collection failed: {final_error}")
+                    raise final_error
             
         except Exception as e:
             logger.error(f"Error initializing collection: {e}")
@@ -383,6 +397,30 @@ class ChromaService:
             
         except Exception as e:
             logger.error(f"Error deleting collection: {e}")
+            return False
+    
+    def reset_collection(self, embedding_function: Optional[Any] = None) -> bool:
+        """
+        Reset the collection (delete and recreate)
+        
+        Args:
+            embedding_function: Optional embedding function for the new collection
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Delete existing collection
+            self.delete_collection()
+            
+            # Recreate collection
+            self.collection = self._initialize_collection(embedding_function)
+            
+            logger.info(f"Reset collection {self.collection_name}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error resetting collection: {e}")
             return False
     
     def get_collection_info(self) -> Dict[str, Any]:

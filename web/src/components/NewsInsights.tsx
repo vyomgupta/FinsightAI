@@ -61,7 +61,8 @@ const NewsInsights: React.FC = () => {
         newsData = await apiService.getNewsByCategory(selectedCategory, 15);
       }
       
-      setArticles(newsData);
+      // Ensure newsData is always an array
+      setArticles(Array.isArray(newsData) ? newsData : []);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to fetch news');
       // Set mock data for demonstration
@@ -82,7 +83,8 @@ const NewsInsights: React.FC = () => {
 
     try {
       const searchResults = await apiService.searchNews(searchQuery, 15);
-      setArticles(searchResults);
+      // Ensure searchResults is always an array
+      setArticles(Array.isArray(searchResults) ? searchResults : []);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Search failed');
       setArticles(getMockSearchResults());
@@ -254,7 +256,7 @@ const NewsInsights: React.FC = () => {
       {/* News Articles */}
       {!loading && (
         <Grid container spacing={3}>
-          {articles.map((article) => (
+          {Array.isArray(articles) && articles.map((article) => (
             <Grid item xs={12} md={6} lg={4} key={article.id}>
               <Card 
                 elevation={2}
@@ -333,7 +335,7 @@ const NewsInsights: React.FC = () => {
       )}
 
       {/* Empty State */}
-      {!loading && articles.length === 0 && (
+      {!loading && Array.isArray(articles) && articles.length === 0 && (
         <Paper elevation={2} sx={{ p: 6, textAlign: 'center' }}>
           <Article sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" gutterBottom>
